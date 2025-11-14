@@ -77,7 +77,7 @@ function PesquisarUsuarios(valor) {
                       onclick="getUsuariobyID(${u.idFuncionario || u.id})"
                       data-bs-target="#modalAtualizarMaquina">
                     <img src="../assets/svg/atualizar_blue.svg" alt="">
-                    Atualizar
+                    Editar
                 </span>
             </td>
             <td>
@@ -160,7 +160,7 @@ function buscarUsuarios(pagina = 1) {
                         <span class="opcao_crud text-primary" data-bs-toggle="modal" onclick="getUsuariobyID(${u.id})"
                             data-bs-target="#modalAtualizarMaquina">
                             <img src="../assets/svg/atualizar_blue.svg" alt="">
-                            Atualizar
+                            Editar
                         </span>
                     </td>
                     <td>
@@ -258,7 +258,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function getTipoUsuario() {
-  alert('Estou no tipo js');
   var select = document.getElementsByClassName('tipo_usuario_select_tipos');
 
   fetch('/gerenciamentoUsuario/getTipoUsuario')
@@ -417,7 +416,7 @@ function ExcluirUsuario(idFuncionario) {
       // Verifica se o usuário clicou em 'Excluir'
       if (resultadoSwal.isConfirmed) {
         // Variáveis Mockadas (FIXAS)
-        const idFuncionarioGerente = ID_FUNCIONARIO_GERENTE_MOCK;
+        const idFuncionarioGerente = sessionStorage.ID_USUARIO
         const senhaGerente = resultadoSwal.value.senha; // Pega a senha digitada
 
         // CHAMADA FETCH

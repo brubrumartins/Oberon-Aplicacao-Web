@@ -1,4 +1,3 @@
-let ID_USUARIO = 12;
 let paginaAtual = 1;
 let tipoFiltro = 'descricao';
 
@@ -9,58 +8,42 @@ function mudarTipoFiltro(novoTipo, textoBotao) {
   carregarAlertas(1);
 }
 
-function formatarDuracao(segundos) {
-  if (segundos === null || isNaN(segundos)) return 'Ativo';
-  const horas = Math.floor(segundos / 3600);
-  const minutos = Math.floor((segundos % 3600) / 60);
-  const secs = Math.floor(segundos % 60);
-  let duracao = [];
-  if (horas > 0) duracao.push(`${horas}h`);
-  if (minutos > 0) duracao.push(`${minutos}min`);
-  if (secs > 0 || duracao.length === 0) duracao.push(`${secs}s`);
-  return duracao.join(' ');
-}
-
 function renderizarTabela(alertas) {
   const tbody = document.getElementById('Conteudo_real');
   tbody.innerHTML = '';
   if (alertas.length === 0) {
     tbody.innerHTML =
-      '<tr><td colspan="8" class="text-center py-4">Nenhum alerta encontrado.</td></tr>';
+      '<tr><td colspan="6" class="text-center py-4">Nenhum alerta encontrado.</td></tr>';
     return;
   }
   alertas.forEach((alerta) => {
-    const dataInicio = alerta.horarioInicio ? alerta.horarioInicio.replace(' ', ' às ') : 'N/A';
-    const dataFinal = alerta.horarioFinal ? alerta.horarioFinal.replace(' ', ' às ') : 'Ativo';
-    const duracaoFormatada = formatarDuracao(alerta.duracaoSegundos);
+    const dataHoraRegistro = alerta.horarioRegistro
+      ? alerta.horarioRegistro.replace(' ', ' às ')
+      : 'N/A';
     let criticidadeClass = 'text-secondary';
     switch (alerta.nivel.toUpperCase()) {
       case 'CRITICO':
         criticidadeClass = 'text-danger fw-bold';
         break;
-      case 'ATENCAO':
+      case 'ALERTA':
         criticidadeClass = 'text-warning fw-bold';
         break;
       case 'OCIOSO':
-        criticidadeClass = 'text-success';
-        break;
       default:
-        criticidadeClass = 'text-success';
+        criticidadeClass = 'text-danger';
         break;
     }
 
     const row = `
-            <tr>
-                <td>${alerta.descricao}</td>
-                <td>${alerta.tipoComponente}</td>
-                <td>${dataInicio}</td>
-                <td>${dataFinal}</td>
-                <td>${alerta.funcaoMonitorar}</td>
-                <td>${duracaoFormatada}</td>
-                <td class="${criticidadeClass}">${alerta.nivel}</td>
-                <td>${alerta.nomeMaquina}</td>
-            </tr>
-        `;
+      <tr>
+        <td>${alerta.descricao}</td>
+        <td>${alerta.tipoComponente}</td>
+        <td>${alerta.funcaoMonitorar}</td>
+        <td class="${criticidadeClass}">${alerta.nivel}</td>
+        <td>${alerta.nomeMaquina}</td>
+        <td>${dataHoraRegistro}</td> 
+      </tr>
+    `;
     tbody.innerHTML += row;
   });
 }
@@ -86,34 +69,34 @@ function renderizarPaginacao(totalPaginas, paginaAtual) {
     .filter((p) => p >= 1 && p <= totalPaginas)
     .sort((a, b) => a - b);
   ul.innerHTML += `
-        <li class="page-item ${paginaAtual === 1 ? 'disabled' : ''}">
-            <a class="page-link" href="#" onclick="carregarAlertas(${paginaAtual - 1})">Anterior</a>
-        </li>
-    `;
+    <li class="page-item ${paginaAtual === 1 ? 'disabled' : ''}">
+      <a class="page-link" href="#" onclick="carregarAlertas(${paginaAtual - 1})">Anterior</a>
+    </li>
+  `;
   let ultimaPaginaRenderizada = 0;
   sortedPages.forEach((p) => {
     if (p > ultimaPaginaRenderizada + 1) {
       ul.innerHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
     }
     ul.innerHTML += `
-            <li class="page-item ${p === paginaAtual ? 'active_pagina' : ''}">
-                <a class="page-link" href="#" onclick="carregarAlertas(${p})">${p}</a>
-            </li>
-        `;
+      <li class="page-item ${p === paginaAtual ? 'active_pagina' : ''}">
+        <a class="page-link" href="#" onclick="carregarAlertas(${p})">${p}</a>
+      </li>
+    `;
     ultimaPaginaRenderizada = p;
   });
   ul.innerHTML += `
-        <li class="page-item ${paginaAtual === totalPaginas ? 'disabled' : ''}">
-            <a class="page-link" href="#" onclick="carregarAlertas(${paginaAtual + 1})">Seguinte</a>
-        </li>
-    `;
+    <li class="page-item ${paginaAtual === totalPaginas ? 'disabled' : ''}">
+      <a class="page-link" href="#" onclick="carregarAlertas(${paginaAtual + 1})">Seguinte</a>
+    </li>
+  `;
   navPaginas.style.display = 'flex';
 }
 
 function montarUrlFiltros(idFuncionario, pagina) {
   const termoPesquisa = document.getElementById('input_pesquisa_alerta').value || '';
-  const dataInicio = document.getElementById('input_data_inicio').value || 'vazio';
-  const dataFim = document.getElementById('input_data_fim').value || 'vazio';
+  const dataInicio = 'vazio';
+  const dataFim = 'vazio';
   const termoEncoded = encodeURIComponent(termoPesquisa === '' ? 'vazio' : termoPesquisa);
   const tipoEncoded = encodeURIComponent(tipoFiltro);
   const inicioEncoded = encodeURIComponent(dataInicio);
@@ -126,11 +109,14 @@ function carregarAlertas(pagina = 1) {
   const tbodyReal = document.getElementById('Conteudo_real');
   const tbodySkeleton = document.getElementById('Estrutura_esqueleto_carregamento');
   const divPaginacao = document.querySelector('.div_paginas');
+
   if (tbodyReal) tbodyReal.style.display = 'none';
   if (tbodySkeleton) tbodySkeleton.style.display = 'contents';
   if (divPaginacao) divPaginacao.style.display = 'none';
+
   const usuarioSessao = JSON.parse(sessionStorage.getItem('usuario') || '{}');
-  const idFuncionario = usuarioSessao.idFuncionario || ID_USUARIO;
+  const idFuncionario = 12
+
   if (!idFuncionario) {
     console.error('ID do usuário não encontrado na sessão.');
     if (tbodyReal) tbodyReal.style.display = 'contents';
@@ -181,14 +167,16 @@ function exportarRelatorio() {
   });
 
   const usuarioSessao = JSON.parse(sessionStorage.getItem('usuario') || '{}');
-  const idFuncionario = usuarioSessao.idFuncionario || ID_USUARIO;
+  const idFuncionario = usuarioSessao.idUsuario || usuarioSessao.id || usuarioSessao.fkUsuario;
 
   if (!idFuncionario) {
     Swal.fire('Erro!', 'ID de usuário ausente.', 'error');
     return;
   }
+
   const url = montarUrlFiltros(idFuncionario, 1);
   const urlExport = url.replace(`/listar/${idFuncionario}/1/`, `/exportar/${idFuncionario}/`);
+
   fetch(urlExport)
     .then((response) => {
       if (!response.ok) {
